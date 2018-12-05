@@ -1,0 +1,104 @@
+apply plugin: 'com.android.application'
+ext {
+    boolean isWindow = isWindowsOS();
+    if(isWindow){
+        native_sdk_path = rootDir.getAbsolutePath().replace('\\','/') + "/app"
+    }else{
+        native_sdk_path = file(rootDir.getAbsolutePath() + "/app")
+    }
+}
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "media.ushow.aac_codec_fdk"
+        minSdkVersion 18
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters 'armeabi-v7a'
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+        }
+    }
+
+
+    buildTypes {
+
+        debug{
+
+            debuggable true
+            jniDebuggable true
+
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_PLATFORM=android-16', '-DANDROID_TOOLCHAIN=clang',
+                            '-DANDROID_ARM_NEON=TRUE', '-DANDROID_STL=gnustl_static',
+                            "-DPATH_TO_MEDIACORE:STRING=${native_sdk_path}"
+                    cFlags '-O3', '-DGL_GLEXT_PROTOTYPES', '-DEGL_EGLEXT_PROTOTYPES', '-fsigned-char', "-I${native_sdk_path}", '-Wformat','-mfpu=neon', '-mfloat-abi=softfp -frtti' // full optimization, char data type is signed
+                    // 编译优化，设置函式是否能被 inline 的伪指令长度
+                    cppFlags '-O3', '-fexceptions', '-fsigned-char',
+                            "-frtti -std=c++11", '-Wformat'
+
+
+                }
+            }
+        }
+
+        release {
+
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_PLATFORM=android-16', '-DANDROID_TOOLCHAIN=clang',
+                            '-DANDROID_ARM_NEON=TRUE', '-DANDROID_STL=gnustl_static',
+                            '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
+                            "-DPATH_TO_MEDIACORE:STRING=${native_sdk_path}"
+                    cFlags '-O3', '-DGL_GLEXT_PROTOTYPES', '-DEGL_EGLEXT_PROTOTYPES', '-fsigned-char', "-I${native_sdk_path}", '-Wformat','-mfpu=neon', '-mfloat-abi=softfp -frtti' // full optimization, char data type is signed
+                    // 编译优化，设置函式是否能被 inline 的伪指令长度
+                    cppFlags '-O3', '-fexceptions', '-fsigned-char',
+                            "-frtti -std=c++11", '-Wformat'
+
+                }
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+}
+
+clean.doFirst {
+    delete "${projectDir}/.externalNativeBuild"
+}
+
+/** 判断是否为Windows操作系统 */
+boolean isWindowsOS(){
+    boolean isWindowsOS = false;
+    String osName = System.getProperty("os.name");
+    println("os.name=" + osName);
+    if(osName == null || "".equals(osName)) {
+        return false;
+    }
+    if(osName.toLowerCase().indexOf("windows") > -1){
+        isWindowsOS = true;
+    }
+    return isWindowsOS;
+}

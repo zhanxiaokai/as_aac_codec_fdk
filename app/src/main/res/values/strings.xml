@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">aac_codec_fdk</string>
+    <string name="aac_encode">aac_encode</string>
+    <string name="aac_decode">aac_decode</string>
+</resources>
